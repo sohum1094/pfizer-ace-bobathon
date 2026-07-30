@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "mq-mcp-server-bob": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/FULL/PATH/TO/LAB/mq-mcp-server-bob",
+        "mqmcpserver_bob.py"
+      ],
+      "env": {
+        "MQ_HOST": "localhost",
+        "MQ_PORT": "9443",
+        "MQ_USER": "admin",
+        "MQ_PASSWORD": "passw0rd"
+      },
+      "description": "IBM MQ MCP Server for managing WebSphere MQ queue managers",
+      "tools": [
+        {
+          "name": "dspmq",
+          "description": "List available queue managers and their running status"
+        },
+        {
+          "name": "get_status",
+          "description": "Get MQ status as JSON for dashboard and monitoring"
+        },
+        {
+          "name": "runmqsc",
+          "description": "Run MQSC commands against a specific queue manager"
+        }
+      ]
+    }
+  }
+}
