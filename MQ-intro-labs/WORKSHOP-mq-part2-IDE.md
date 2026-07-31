@@ -14,7 +14,7 @@ Demonstrate how **IBM Bob* (IDE / Shell) can:
 We use a local **IBM MQ Queue Manager (QM1)** running in a Podman container, alongside the open-source **IBM MQ MCP Server**.
 
 ### Bob IDE Mode
-> **Required Mode:** `Code`
+> **Required Mode:** `Agent`
 >
 > Ensure the MQ MCP server is actively running in the background and connected to QM1.
 
