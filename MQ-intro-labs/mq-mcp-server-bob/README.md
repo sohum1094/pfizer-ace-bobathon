@@ -1,76 +1,212 @@
-# IBM MQ MCP Server for Bob
+# MQ MCP Server for Bob — Setup Guide
 
-This is a Bob-compatible version of the IBM MQ MCP Server that uses the `stdio` transport protocol, making it easy to import and use within IBM Bob.
+This guide sets up the IBM MQ container and the MQ MCP Server so that Bob can manage IBM MQ using natural language. When you reach the ✅ at the end, return to the [workshop README](../README.md#step-2-start-the-workshops) to begin the labs.
 
 ## Overview
 
-The MQ MCP Server exposes IBM WebSphere MQ administrative operations through the Model Context Protocol (MCP), allowing Bob to interact with MQ queue managers using natural language.
+The MQ MCP Server exposes IBM MQ administrative operations through the Model Context Protocol (MCP), giving Bob three tools to work with:
 
-### Available Tools
+| Tool | What it does |
+|------|-------------|
+| `dspmq` | List all queue managers and their running status |
+| `get_status` | Get MQ status as JSON (for dashboards and monitoring) |
+| `runmqsc` | Execute any MQSC command against a queue manager |
 
-1. **dspmq** - List all queue managers and their running status
-2. **get_status** - Get MQ status as JSON for dashboards and monitoring
-3. **runmqsc** - Execute MQSC commands against a specific queue manager
+---
 
-## Prerequisites
+## Before You Start
 
-- Python 3.10 or higher
-- IBM WebSphere MQ with mqweb server running
-- Access to MQ REST API (default port 9443)
-- `uv` package manager (recommended) or `pip`
+Make sure you have the following:
 
-## Installation
+- [ ] **IBM Bob** installed
+- [ ] **Python 3.10+** — verify with `python --version`
+- [ ] **Podman Desktop** or **Docker** — for running the MQ container
+- [ ] **Terminal / Command Prompt** access
 
-### Step 1: Install uv (if not already installed)
+---
 
-**macOS/Linux:**
+## Step 1: Start IBM MQ
+
+Choose the tab for your platform.
+
+---
+
+### Linux / Windows (x86_64)
+
+**Using Docker:**
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+docker run \
+  --env LICENSE=accept \
+  --env MQ_QMGR_NAME=QM1 \
+  --env MQ_APP_USER=app \
+  --env MQ_APP_PASSWORD=passw0rd \
+  --env MQ_ADMIN_USER=admin \
+  --env MQ_ADMIN_PASSWORD=passw0rd \
+  --volume qm1data:/mnt/mqm \
+  --publish 1414:1414 \
+  --publish 9443:9443 \
+  --detach \
+  --name QM1 \
+  icr.io/ibm-messaging/mq:latest
 ```
 
-**Windows:**
+**Using Podman:**
+```bash
+podman volume create qm1data
+
+podman run \
+  --env LICENSE=accept \
+  --env MQ_QMGR_NAME=QM1 \
+  --env MQ_APP_USER=app \
+  --env MQ_APP_PASSWORD=passw0rd \
+  --env MQ_ADMIN_USER=admin \
+  --env MQ_ADMIN_PASSWORD=passw0rd \
+  --volume qm1data:/mnt/mqm \
+  --publish 1414:1414 \
+  --publish 9443:9443 \
+  --detach \
+  --name QM1 \
+  icr.io/ibm-messaging/mq:latest
+```
+
+Verify the container is running:
+```bash
+podman ps   # or: docker ps
+```
+
+---
+
+### macOS Apple Silicon (M1/M2/M3/M4)
+
+> ⚠️ **Important:** IBM MQ containers do **not** natively support ARM64. You must run them under x86_64 emulation via Rosetta.
+
+**1. Install Podman Desktop**
+
+Download and install from: https://podman-desktop.io/
+
+**2. Configure the Podman machine for x86_64 emulation**
+
+```bash
+podman machine stop
+
+podman machine set --rootful
+
+podman machine start
+```
+
+**3. Pull the IBM MQ image with the platform flag**
+
+```bash
+podman pull --platform linux/amd64 icr.io/ibm-messaging/mq:latest
+```
+
+> You'll see a platform mismatch warning — this is expected and normal.
+
+**4. Create a data volume and start the container**
+
+```bash
+podman volume create qm1data
+
+podman run \
+  --env LICENSE=accept \
+  --env MQ_QMGR_NAME=QM1 \
+  --env MQ_APP_USER=app \
+  --env MQ_APP_PASSWORD=passw0rd \
+  --env MQ_ADMIN_USER=admin \
+  --env MQ_ADMIN_PASSWORD=passw0rd \
+  --volume qm1data:/mnt/mqm \
+  --publish 1414:1414 \
+  --publish 9443:9443 \
+  --detach \
+  --name QM1 \
+  icr.io/ibm-messaging/mq:latest
+```
+
+> You may see `AMQ6209W` / `AMQ6183W` SIGTRAP warnings in the logs — these are normal Rosetta emulation artefacts and do not affect functionality.
+
+**5. Verify the container is running**
+
+```bash
+podman ps
+```
+
+You should see `QM1` listed.
+
+**6. Test the MQ REST API**
+
+```bash
+curl -k https://localhost:9443/ibmmq/rest/v3/admin/qmgr/
+```
+
+Any JSON response (including an authentication error) confirms MQ is reachable.
+If an error is returned by `curl` then wait a few moments for the QM1 to be ready and retry.
+
+> **Performance note:** Rosetta emulation is slightly slower than native x86_64 but is fully functional for lab purposes.
+
+---
+
+## Step 2: Install uv
+
+`uv` is used to run the MCP server.
+
+**macOS / Linux:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.cargo/env
+```
+
+**Windows (PowerShell):**
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### Step 2: Navigate to the server directory
+Verify:
+```bash
+uv --version
+```
+
+---
+
+## Step 3: Install MCP Server Dependencies
 
 ```bash
 cd mq-mcp-server-bob
-```
-
-### Step 3: Install dependencies
-
-```bash
 uv pip install httpx fastmcp "mcp[cli]"
 ```
 
-Or using pip:
-```bash
-pip install -r requirements.txt
+---
+
+## Step 4: Configure the MCP Server
+
+Open `bob-mcp-config.json` in this directory and update two things:
+
+**1. Set the absolute path to `mqmcpserver_bob.py`:**
+
+```json
+"args": ["run", "/absolute/path/to/mq-mcp-server-bob/mqmcpserver_bob.py"]
 ```
 
-## Configuration
+To find your absolute path:
+```bash
+# macOS / Linux
+pwd
 
-The server uses environment variables for configuration:
+# Windows
+cd
+```
 
-- `MQ_HOST` - MQ server hostname (default: `localhost`)
-- `MQ_PORT` - MQ REST API port (default: `9443`)
-- `MQ_USER` - MQ admin username (default: `admin`)
-- `MQ_PASSWORD` - MQ admin password (default: `passw0rd`)
+Example values:
+- macOS/Linux: `"/Users/yourname/Desktop/MQ/mq-mcp-server-bob/mqmcpserver_bob.py"`
+- Windows: `"C:/Users/yourname/Desktop/MQ/mq-mcp-server-bob/mqmcpserver_bob.py"`
 
-### Configuration Options
-
-#### Option 1: Using bob-mcp-config.json (Recommended for Bob)
-
-Edit the `bob-mcp-config.json` file to set your MQ connection details:
+**2. Set your MQ credentials** (defaults work for the lab container):
 
 ```json
 {
   "mcpServers": {
     "mq-mcp-server-bob": {
       "command": "uv",
-      "args": ["run", "/full/path/to/mq-mcp-server-bob/mqmcpserver_bob.py"],
+      "args": ["run", "/absolute/path/to/mq-mcp-server-bob/mqmcpserver_bob.py"],
       "env": {
         "MQ_HOST": "localhost",
         "MQ_PORT": "9443",
@@ -82,203 +218,101 @@ Edit the `bob-mcp-config.json` file to set your MQ connection details:
 }
 ```
 
-**Important:** Replace `/full/path/to/mq-mcp-server-bob/` with the actual absolute path to your `mq-mcp-server-bob` directory.
+**Environment variable reference:**
 
-#### Option 2: Using environment variables
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MQ_HOST` | `localhost` | MQ server hostname |
+| `MQ_PORT` | `9443` | MQ REST API port |
+| `MQ_USER` | `admin` | MQ admin username |
+| `MQ_PASSWORD` | `passw0rd` | MQ admin password |
 
-**Local MQ (localhost):**
+---
+
+## Step 5: Import the MCP Server into Bob
+
+1. Open **IBM Bob**
+2. Switch to **Agent Mode**
+3. Go to **Settings → MCP Servers**
+4. Click **"Import MCP Server"**
+5. Navigate to the `mq-mcp-server-bob` directory
+6. Select `bob-mcp-config.json`
+7. Click **"Import"**
+
+Look for a **green indicator** next to `mq-mcp-server-bob` — this confirms it connected successfully.
+![alt text](images/mcp-import-success.png)
+
+---
+
+## Step 6: Verify the Setup
+
+In the Bob chat, type:
+
+```
+List all MQ queue managers
+```
+
+---
+
+## ✅ Setup Complete
+
+If Bob responded with `QM1` showing status `Running`, you are ready to start the workshops.
+
+**👉 [Return to the workshop README to begin the labs](../README.md#step-2-start-the-workshops)**
+
+---
+
+## Troubleshooting
+
+### "Cannot connect to MQ"
+- Check the container is running: `podman ps` or `docker ps`
+- Test the REST API: `curl -k https://localhost:9443/ibmmq/rest/v3/admin/qmgr/`
+- Check firewall settings for port 9443
+
+### "Authentication failed"
+- Double-check credentials in `bob-mcp-config.json` match `admin` / `passw0rd`
+- Ensure the MQ user has `MQWebAdmin` role
+- Check `mqwebuser.xml` if you have customised MQ security
+
+### "Module not found"
+- Run `uv sync` or `pip install -r requirements.txt`
+- Verify Python version is 3.10+: `python --version`
+
+### MCP server not connecting in Bob
+- Verify the path in `bob-mcp-config.json` is an **absolute** path
+- Use forward slashes `/` even on Windows
+- Restart Bob after making path changes
+- Check Settings → MCP Servers logs for the specific error
+
+### Testing the server outside Bob
+
+Run standalone (press `Ctrl+C` to stop):
 ```bash
 uv run mqmcpserver_bob.py
 ```
 
-**Remote MQ:**
-```bash
-MQ_HOST=10.0.0.12 MQ_PASSWORD=your_password uv run mqmcpserver_bob.py
-```
-
-## Importing into Bob
-
-### Method 1: Using Bob's MCP Import Feature
-
-1. **Edit the configuration file first:**
-   - Open `bob-mcp-config.json`
-   - Update the path in the `args` array to the absolute path of `mqmcpserver_bob.py`
-   - Example: `"/Users/coredump/Desktop/MQ/mq-mcp-server-bob/mqmcpserver_bob.py"`
-   - Update MQ credentials in the `env` section if needed
-
-2. **Import into Bob:**
-   - Open Bob
-   - Switch to **Advance Mode** (if not already in it)
-   - Go to MCP Server settings
-   - Click "Import MCP Server"
-   - Navigate to the `mq-mcp-server-bob` directory
-   - Select the `bob-mcp-config.json` file
-   - Bob will automatically configure and connect to the MQ MCP Server
-
-### Method 2: Manual Configuration in Bob
-
-1. Open Bob's MCP configuration
-2. Add a new MCP server with these settings:
-   - **Name:** `mq-mcp-server-bob`
-   - **Command:** `uv`
-   - **Args:** `["run", "mqmcpserver_bob.py"]`
-   - **Working Directory:** Path to `mq-mcp-server-bob` folder
-   - **Environment Variables:**
-     - `MQ_HOST`: Your MQ host
-     - `MQ_PORT`: Your MQ port (usually 9443)
-     - `MQ_USER`: Your MQ username
-     - `MQ_PASSWORD`: Your MQ password
-
-### Method 3: Using Bob's Settings File
-
-Add the following to Bob's MCP configuration file (usually in `~/.bob/mcp-servers.json` or similar):
-
-```json
-{
-  "mq-mcp-server-bob": {
-    "command": "uv",
-    "args": ["run", "/full/path/to/mq-mcp-server-bob/mqmcpserver_bob.py"],
-    "env": {
-      "MQ_HOST": "localhost",
-      "MQ_PORT": "9443",
-      "MQ_USER": "admin",
-      "MQ_PASSWORD": "passw0rd"
-    }
-  }
-}
-```
-
-## Testing the Server
-
-### Test 1: Standalone Test
-
-Run the server directly to verify it starts correctly:
-
-```bash
-uv run mqmcpserver_bob.py
-```
-
-The server should start and wait for stdio input from Bob.
-
-### Test 2: Using FastMCP Inspector
-
-Test the tools interactively without Bob:
-
+Or use the interactive FastMCP inspector:
 ```bash
 uv run fastmcp dev mqmcpserver_bob.py
 ```
 
-This opens a web interface where you can manually test the `dspmq`, `get_status`, and `runmqsc` tools.
+This opens a web UI where you can call `dspmq`, `get_status`, and `runmqsc` directly.
 
-### Test 3: Test with Bob
+---
 
-Once imported into Bob, try these prompts:
+## About This Server
 
-1. **List queue managers:**
-   ```
-   List all MQ queue managers and their status
-   ```
+This is a Bob-compatible fork of the IBM MQ MCP Server. Key differences from the original:
 
-2. **Get detailed status:**
-   ```
-   Get the current MQ status as JSON
-   ```
+| Change | Detail |
+|--------|--------|
+| Transport | `stdio` instead of `streamable-http` — required for Bob |
+| Error handling | Improved messages and logging |
+| Security | JSON encoding for MQSC commands (no string concatenation) |
+| Configuration | Ready-to-use `bob-mcp-config.json` included |
 
-3. **Run MQSC command:**
-   ```
-   Display all local queues on queue manager QM1
-   ```
-
-## Usage Examples with Bob
-
-### Example 1: Check Queue Manager Status
-```
-Bob, can you check if my MQ queue managers are running?
-```
-
-### Example 2: Display Queue Information
-```
-Bob, show me all local queues on QM1
-```
-
-### Example 3: Create a New Queue
-```
-Bob, create a local queue called MY.TEST.QUEUE on QM1
-```
-
-### Example 4: Display Channel Status
-```
-Bob, display all channels on queue manager QM1
-```
-
-## Differences from Original MQ MCP Server
-
-This Bob-compatible version has the following changes:
-
-1. **Transport Protocol:** Uses `stdio` instead of `streamable-http` for Bob compatibility
-2. **Enhanced Error Handling:** Better error messages and logging
-3. **Improved Documentation:** More detailed docstrings for each tool
-4. **Bob Configuration:** Includes ready-to-use configuration files
-5. **Security:** Uses JSON encoding for MQSC commands instead of string concatenation
-
-## Troubleshooting
-
-### Connection Issues
-
-If Bob cannot connect to the MQ server:
-
-1. Verify MQ is running: `podman ps` (if using container)
-2. Check MQ REST API is accessible: `curl -k https://localhost:9443/ibmmq/rest/v3/admin/qmgr/`
-3. Verify credentials in the configuration
-4. Check firewall settings for port 9443
-
-### Permission Issues
-
-If you get authentication errors:
-
-1. Ensure the MQ user has appropriate permissions
-2. For testing, use a user in the `MQWebAdmin` role
-3. Check MQ security settings in `mqwebuser.xml`
-
-### Server Not Starting
-
-If the server fails to start:
-
-1. Verify Python version: `python --version` (should be 3.10+)
-2. Reinstall dependencies: `uv sync` or `pip install -r requirements.txt`
-3. Check for port conflicts
-4. Review logs for specific error messages
-
-## Security Considerations
-
-⚠️ **Important Security Notes:**
-
-- The default credentials (`admin`/`passw0rd`) are for testing only
-- Always use strong passwords in production
-- Consider using certificate-based authentication
-- Restrict MQ user permissions to minimum required
-- Use HTTPS/TLS for MQ REST API connections
-- Store credentials securely (use environment variables or secrets management)
-
-## Support and Documentation
-
-- **MQ REST API Documentation:** [IBM MQ REST API](https://www.ibm.com/docs/en/ibm-mq/9.4.x?topic=administering-administration-using-rest-api)
-- **MCP Protocol:** [Model Context Protocol](https://modelcontextprotocol.io/)
-- **FastMCP Documentation:** [FastMCP GitHub](https://github.com/jlowin/fastmcp)
-- **IBM Bob:** [IBM Bob Product Page](https://www.ibm.com/products/bob)
+---
 
 ## License
 
-Copyright (c) 2025 IBM Corp.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Copyright (c) 2025 IBM Corp. Licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
