@@ -17,13 +17,13 @@ Day 1 covers the foundational integrations you need before working through the u
 
 Learn how to launch and use the **IBM Bob Shell** directly inside the ACE Toolkit to generate message flows, analyse existing artifacts, and get guided assistance without leaving your IDE.
 
-👉 See [intro-labs/Bob-Shell-ACE.md](intro-labs/Bob-Shell-ACE.md)
+👉 See [ACE-intro-labs/Bob-Shell-ACE.md](ACE-intro-labs/Bob-Shell-ACE.md)
 
 ### Lab B — IBM ACE MCP Server in Bob IDE
 
 Learn how to deploy a sample ACE application, configure an **MCP server** from the ACE Web UI, and connect it to Bob IDE so that Bob has live, structured access to your running integration runtime.
 
-👉 See [intro-labs/Bob-IDE-ACE.md](intro-labs/Bob-IDE-ACE.md)
+👉 See [ACE-intro-labs/Bob-IDE-ACE.md](ACE-intro-labs/Bob-IDE-ACE.md)
 
 ### Lab C — IBM MQ AI-Native Operations with Bob
 

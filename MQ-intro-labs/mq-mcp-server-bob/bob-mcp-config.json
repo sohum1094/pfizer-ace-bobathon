@@ -5,7 +5,7 @@
       "args": [
         "run",
         "--directory",
-        "/FULL/PATH/TO/LAB/mq-mcp-server-bob",
+        "/Users/sohum/Documents/Projects/Bobathon/Pfizer-ACE-only/pfizer-ace-all-labs/MQ-intro-labs/mq-mcp-server-bob",
         "mqmcpserver_bob.py"
       ],
       "env": {
@@ -27,6 +27,10 @@
         {
           "name": "runmqsc",
           "description": "Run MQSC commands against a specific queue manager"
+        },
+        {
+          "name": "read_mq_logs",
+          "description": "Read the last N lines of AMQERR01.LOG for a queue manager via podman exec"
         }
       ]
     }

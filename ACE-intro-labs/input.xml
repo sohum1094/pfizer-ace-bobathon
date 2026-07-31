@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SaleEnvelope>
+    <Header>
+        <SaleListCount>2</SaleListCount>
+        <TransformationType>xsl</TransformationType>
+    </Header>
+    <SaleList>
+        <Invoice>
+            <Initial>K</Initial>
+            <Initial>A</Initial>
+            <Surname>Braithwaite</Surname>
+            <Item>
+                <Code>00</Code>
+                <Code>01</Code>
+                <Code>02</Code>
+                <Description>Twister</Description>
+                <Category>Games</Category>
+                <Price>00.30</Price>
+                <Quantity>01</Quantity>
+            </Item>
+            <Item>
+                <Code>02</Code>
+                <Code>03</Code>
+                <Code>01</Code>
+                <Description>The Times Newspaper</Description>
+                <Category>Books and Media</Category>
+                <Price>00.20</Price>
+                <Quantity>01</Quantity>
+            </Item>
+            <Balance>00.50</Balance>
+            <Currency>Sterling</Currency>
+        </Invoice>
+        <Invoice>
+            <Initial>T</Initial>
+            <Initial>J</Initial>
+            <Surname>Dunnwin</Surname>
+            <Item>
+                <Code>04</Code>
+                <Code>95</Code>
+                <Code>01</Code>
+                <Description>The Origin of Species</Description>
+                <Category>Books and Media</Category>
+                <Price>22.34</Price>
+                <Quantity>02</Quantity>
+            </Item>
+            <Item>
+                <Code>05</Code>
+                <Code>12</Code>
+                <Code>03</Code>
+                <Description>Monopoly Board Game</Description>
+                <Category>Games</Category>
+                <Price>15.99</Price>
+                <Quantity>01</Quantity>
+            </Item>
+            <Balance>60.67</Balance>
+            <Currency>Sterling</Currency>
+        </Invoice>
+    </SaleList>
+</SaleEnvelope>
+
+

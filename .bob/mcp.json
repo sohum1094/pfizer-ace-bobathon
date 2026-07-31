@@ -15,6 +15,40 @@
         "suggest_assets",
         "list_updates"
       ]
+    },
+    "mq-mcp-server-bob": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/sohum/Documents/Projects/Bobathon/Pfizer-ACE-only/pfizer-ace-all-labs/MQ-intro-labs/mq-mcp-server-bob",
+        "mqmcpserver_bob.py"
+      ],
+      "env": {
+        "MQ_HOST": "localhost",
+        "MQ_PORT": "9443",
+        "MQ_USER": "admin",
+        "MQ_PASSWORD": "passw0rd"
+      },
+      "description": "IBM MQ MCP Server for managing WebSphere MQ queue managers",
+      "tools": [
+        {
+          "name": "dspmq",
+          "description": "List available queue managers and their running status"
+        },
+        {
+          "name": "get_status",
+          "description": "Get MQ status as JSON for dashboard and monitoring"
+        },
+        {
+          "name": "runmqsc",
+          "description": "Run MQSC commands against a specific queue manager"
+        },
+        {
+          "name": "read_mq_logs",
+          "description": "Read the last N lines of AMQERR01.LOG for a queue manager via podman exec"
+        }
+      ]
     }
   }
 }
