@@ -14,7 +14,7 @@ Demonstrate how **IBM Bob** (IDE/ Shell) can:
 We use a local **IBM MQ Queue Manager (QM1)** running in a Podman container, alongside the open-source **IBM MQ MCP Server**.
 
 ### Bob IDE Mode
-> **Required Mode:** `Code` or `Web Developer`
+> **Required Mode:** `Agent`
 >
 > Ensure you have an environment capable of running Node.js and Python for the dashboard and MCP server components.
 
@@ -87,7 +87,9 @@ SREs spend significant time diagnosing outages. Bob can dramatically reduce Mean
 
 ### Setup (Run in terminal)
 > Stop the Queue Manager to simulate an outage:
-> `podman stop QM1`
+ ```sh 
+ podman stop QM1
+ ```
 
 ### Prompt
 ```
@@ -118,8 +120,8 @@ Requirements:
 1. Glassmorphism styling with a dark, premium aesthetic (indigo and slate color palette).
 2. Display the Queue Manager status prominently (online/offline indicator).
 3. Create a list or grid of Queues showing their current depth vs max depth with a visual progress bar.
-4. Add a chat module on the side labeled "Antigravity AI SRE" where a user could supposedly chat with you.
-Create the full frontend application in the 'dashboard' folder.
+4. Add a chat module on the side labeled "Digital AI SRE" where a user could supposedly chat with you.
+Create the full frontend application in the 'MQ-intro-labs/dashboard' folder.
 ```
 
 ### Expected Outcome
