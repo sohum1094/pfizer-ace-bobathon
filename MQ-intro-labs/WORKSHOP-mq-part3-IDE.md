@@ -12,7 +12,7 @@ Demonstrate how **IBM Bob** (IDE / Shell) can:
 - Perform advanced message debugging and browse messages on queues securely.
 
 ### Bob IDE Mode
-> **Required Mode:** `Code`
+> **Required Mode:** `Agent`
 >
 > Ensure the MQ MCP server is running and you have access to the extended tools from Part 1.
 
@@ -41,6 +41,10 @@ Look at the `mqmcpserver.py` file and add a new FastMCP tool called `read_mq_log
 
 ### Expected Outcome
 Bob should seamlessly rewrite the Python server code, adding the `@mcp.tool()` wrapper and instructing the user to restart the server.
+
+Ensure that Bob edited the `.bob/mcp.json` file and not just the example `MQ-intro-labs/mq-mcp-server-bob/bob-mcp-config.json` file.
+
+**Restart the MCP** through Bob IDE's UI by going to `Bob Settings` from the Bob side panel -> `MCP` -> Click the `Refresh icon`
 
 ---
 
@@ -101,7 +105,7 @@ Developers often ask admins: *"Is my message on the queue?"* Browsing queues wit
 
 ### Prompt
 ```
-Developers claim they sent messages to 'DATA.SCADA.INBOUND.QL' but they aren't processing.
+Developers claim they sent messages to 'PAYMENT.IN.QL' but they aren't processing.
 Assuming we have message browse capabilities via the REST API, how would you check if there are poison messages stuck at the top of the queue?
 ```
 
