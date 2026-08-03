@@ -232,15 +232,17 @@ Example values:
 ## Step 5: Import the MCP Server into Bob
 
 1. Open **IBM Bob**
-2. Switch to **Agent Mode**
-3. Go to **Settings → MCP Servers**
+2. Go to **Settings**
+  - <img src="images/bob-settings.png" alt="alt text" height="220">
+3. Navigate to **MCP** settings
+  - <img src="images/mcp-settings.png" alt="alt text" height="220">
 4. Click **"Import MCP Server"**
-5. Navigate to the `mq-mcp-server-bob` directory
-6. Select `bob-mcp-config.json`
-7. Click **"Import"**
-
-Look for a **green indicator** next to `mq-mcp-server-bob` — this confirms it connected successfully.
-![alt text](images/mcp-import-success.png)
+  - <img src="images/import-mcp.png" alt="alt text" height="220">
+5. Choose the **scope** you want your MCP accessible in (global, project-level), click **Open Configuration File**
+  - <img src="images/mcp-scope.png" alt="alt text" height="220">
+6. You will see the `.bob/mcp.json` mcp config file open, replace or update the json with the contents of [`bob-mcp-config.json`](./bob-mcp-config.json)
+7. Return to the **MCP settings** page and look for a **green indicator** next to `mq-mcp-server-bob` — this confirms it connected successfully.
+  - <img src="images/mcp-import-success.png" alt="alt text" height="270">
 
 ---
 
